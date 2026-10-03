@@ -28,11 +28,11 @@ class TestSkillProblemOptimaContract(unittest.TestCase):
 
     def test_skill_contains_sop_and_modes(self):
         content = self.skill_file.read_text(encoding="utf-8")
-        self.assertIn("四步标准作业程序", content)
-        self.assertIn("Dogfood", content)
-        self.assertIn("Audit", content)
-        self.assertIn("Judge", content)
-        self.assertIn("32 类病理张量", content)
+        self.assertIn("四步标准作业程序", content, "SKILL.md must outline the 4-step SOP")
+        self.assertIn("Dogfood", content, "SKILL.md must include Mode A (Dogfood session audit)")
+        self.assertIn("Audit", content, "SKILL.md must include Mode B (Static code audit)")
+        self.assertIn("Judge", content, "SKILL.md must include Mode C (Final mutation judge)")
+        self.assertIn("32 类病理张量", content, "SKILL.md must document 32-class pathology tensor")
 
     def test_referenced_tool_resolution(self):
         # Locate tool-problem-optima
