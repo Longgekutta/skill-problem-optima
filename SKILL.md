@@ -35,6 +35,7 @@ flowchart TD
 | **模式 A：会话自审 (Dogfood)** | “检查刚才对话有没有作弊”、“测测你有没有说谎”、“自查当前会话质量” | `python D:/github/tool-problem-optima/main.py dogfood` |
 | **模式 B：源码静态体检 (Audit)** | “体检这个工程/文件”、“检查有没有幻觉包/TOCTOU并发问题” | `python D:/github/tool-problem-optima/main.py audit --path <目标路径>` |
 | **模式 C：终审裁决 (Judge)** | “新代码写好了，终审一下”、“校验这次修改是否违背意图” | `python D:/github/tool-problem-optima/main.py judge --intent "<原始意图>" --code "<候选代码>"` |
+| **模式 D：前置安检 (Auto-Pilot)** | 代码生成后交付用户前强制静默拦截（Auto-Pilot Pre-Flight） | `python D:/github/tool-problem-optima/main.py preflight --json` |
 
 ---
 
@@ -42,19 +43,25 @@ flowchart TD
 
 智能体直接在宿主机终端调用 `tool-problem-optima`，获取毫秒级物理裁决：
 
-#### 1. 执行会话自审（Dogfood 模式）：
+#### 1. 执行自动前置安检（Auto-Pilot 模式）：
+在向用户发出交付答复前，自动扫描当前工作区所有改动文件及会话约束，若检出严重病理直接在当前轮次内阻断交付并启动自愈重构：
+```bash
+python D:/github/tool-problem-optima/main.py preflight --json
+```
+
+#### 2. 执行会话自审（Dogfood 模式）：
 自动定位 IDE 本地会话轨迹（`transcript.jsonl`），经过三锚点压缩提纯，秒级扫描当前对话的失忆（`PRB-E001`）、迎合（`PRB-E002`）、死循环报错（`PRB-E112`）等认知病理：
 ```bash
 python D:/github/tool-problem-optima/main.py dogfood --json
 ```
 
-#### 2. 执行工程或单文件代码安检（Audit 模式）：
+#### 3. 执行工程或单文件代码安检（Audit 模式）：
 扫描 AST 结构、SSA 跨语句 Def-Use 数据流链与多语言哨兵：
 ```bash
 python D:/github/tool-problem-optima/main.py audit --path "./src" --json
 ```
 
-#### 3. 执行特定意图与变更代码的综合终审（Judge 模式）：
+#### 4. 执行特定意图与变更代码的综合终审（Judge 模式）：
 将用户最初提出的核心约束（如“必须纯标准库、所有ID用UUID”）与 AI 生成的实现代码送入 Tri-Sieve 终审级联：
 ```bash
 python D:/github/tool-problem-optima/main.py judge --intent "全部使用Python标准库，杜绝任何外部依赖" --code "import os\nprint(os.getpid())" --json
