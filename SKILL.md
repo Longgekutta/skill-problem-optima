@@ -56,15 +56,19 @@ python D:/github/tool-problem-optima/main.py dogfood
 ```
 
 #### 3. 执行工程或单文件代码安检（Audit 模式）：
-扫描 AST 结构、SSA 跨语句 Def-Use 数据流链与多语言哨兵：
+扫描 AST 结构、SSA 跨语句 Def-Use 数据流链与多语言哨兵（支持 Python, JS/TS, C/C++, Go）：
 ```bash
 python D:/github/tool-problem-optima/main.py audit --path "./src" --json
 ```
 
 #### 4. 执行特定意图与变更代码的综合终审（Judge 模式）：
-将用户最初提出的核心约束（如“必须纯标准库、所有ID用UUID”）与 AI 生成的实现代码送入 Tri-Sieve 终审级联：
+将用户最初提出的核心约束（如“必须纯标准库、所有ID用UUID”）与 AI 生成的实现代码送入 Tri-Sieve 终审级联（支持内联代码与文件目标两种形态）：
 ```bash
+# 方式 1: 直接对内存候选代码与意图执行即时终审 (Zero-IO)
 python D:/github/tool-problem-optima/main.py judge --intent "全部使用Python标准库，杜绝任何外部依赖" --code "import os\nprint(os.getpid())" --json
+
+# 方式 2: 对已落盘文件与意图执行终审
+python D:/github/tool-problem-optima/main.py judge ./src/candidate.py --intent "必须使用UUIDv4，严禁randint" --json
 ```
 
 ---
@@ -78,21 +82,26 @@ python D:/github/tool-problem-optima/main.py judge --intent "全部使用Python�
   * `PRB-E002`: 阿谀奉承（用户提及错误 API 时未纠错反而在代码中编造调用）。
   * `PRB-E003`: 语法崩坏（生成的代码本身包含 Python SyntaxError）。
 * **E101~E114（形式主义作弊、假绿灯与幽灵交互）**：
-  * `PRB-E104`: 同义反复与恒真测试（`assert True`、`assert 1 == 1`、`assert x == x`）。
+  * `PRB-E104`: 同义反复与恒真测试（`assert True`、`assert 1 == 1`、`assert x == x`、JS `expect(true).toBe(true)`）。
   * `PRB-E105`: 零断言与弱断言假测试（测试函数没有断言，或仅含 `assert x is not None`、`assert len(x) > 0`、`assert isinstance` 等弱断言，缺乏真实验真能力）。
   * `PRB-E107`: 幽灵工具与测试伪造（基于谓词-宾语格网与模态/否定过滤器，杜绝口头声称测试通过却无真实运行记录，或测试报错谎称通过，或改动代码未测试即交差）。
   * `PRB-E109`: 接口与契约漂移（静态检测公共函数签名删减参数、新增非默认必选参数或本地调用实参与形参不匹配）。
   * `PRB-E112`: 故障死循环反复报错（未吸收上一步报错信息，机械复读相同失效指令）。
   * `PRB-E114`: 终端截断盲目性（终端日志被截断时，盲目声称“全量输出已检查且完全无误”）。
 * **E201~E203（跨语句数据流隐患）**：
-  * `PRB-E202`: 可空对象未经判空直接解引用（Nullable Dereference）。
-* **E301~E303（资源与并发冒险）**：
-  * `PRB-E303`: 未受上下文管理器保护的文件/连接句柄泄漏。
-  * `PRB-E302`: TOCTOU 竞争冒险（`access` 与 `open` 之间缺乏原子锁）。
+  * `PRB-E201`: 栅栏差一错误（`index <= len(arr)` 越界）。
+  * `PRB-E202`: 可空对象未经判空直接解引用或下标访问（Nullable Dereference & Subscript Access）。
+* **E301~E304（资源与并发冒险）**：
+  * `PRB-E301`: TOCTOU 竞争冒险（`access`/`exists` 与 `open` 之间缺乏原子锁）。
+  * `PRB-E302`: 锁顺序不对称死锁风险。
+  * `PRB-E303`: 未受上下文管理器保护的文件/连接句柄泄漏（Python `open` 无 `close`，Go `os.Open` 无 `Close`，C `fopen` 无 `fclose`）。
+  * `PRB-E304`: 循环内无界协程/线程暴涨（Go `for ... go func()`）。
 * **E401~E402（测试随机性作弊）**：
   * `PRB-E401`: 测试中引入 `random.randint` 导致偶发通过/偶发失败。
+  * `PRB-E402`: 多个裸断言无诊断信息（Assertion Roulette）。
 * **E501~E503（生态幻觉与供应链安全）**：
   * `PRB-E501`: 虚构外部包（Slopsquatting，导入 PyPI/标准库中根本不存在的幽灵库）。
+  * `PRB-E502`: 通配符导入（Wildcard `from x import *` 或 JS `import * as x`）。
   * `PRB-E503`: 明文凭据与 API Key 硬编码泄露。
 
 ---
