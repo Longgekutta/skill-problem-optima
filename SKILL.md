@@ -50,9 +50,9 @@ python D:/github/tool-problem-optima/main.py preflight --json
 ```
 
 #### 2. 执行会话自审（Dogfood 模式）：
-自动定位 IDE 本地会话轨迹（`transcript.jsonl`），经过三锚点压缩提纯，秒级扫描当前对话的失忆（`PRB-E001`）、迎合（`PRB-E002`）、死循环报错（`PRB-E112`）等认知病理：
+自动定位 IDE 本地会话轨迹（`transcript.jsonl`），执行对标 AgentBench/SWE-bench 的全阶多轮时序回放（Full Trajectory Replay），逐轮穿透审计全部历史交互中的推理-行动因果一致性与工具入参，并对全会话产生的所有突变代码文件执行 AST 与数据流终审，拒绝虚假毫秒免检，提供不可伪造的真实缺陷账单：
 ```bash
-python D:/github/tool-problem-optima/main.py dogfood --json
+python D:/github/tool-problem-optima/main.py dogfood
 ```
 
 #### 3. 执行工程或单文件代码安检（Audit 模式）：
